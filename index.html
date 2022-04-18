@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <link rel="stylesheet" href="css/index.css" />
+    <!-- <script src="../../publicjs/public.js"></script> -->
+    <script src="js/index.js"></script>
+</head>
+<body>
+    <div class="main" id="main">
+        <ul class="options" id="options">
+            <li value="1">超级困难</li>
+            <li value="2">困难</li>
+            <li value="3">一般</li>
+            <li value="4">简单</li>
+            <li value="5">超级简单</li>
+        </ul>
+    </div> 
+</body>
+<script>
+    /*
+        ooa
+        1.引擎
+            1.获取元素，绑定事件
+            2.获取难度值
+            3.创建logo，loading
+            4.设置时间函数到时间删除logo，loading，
+            5.开始游戏，创建feiji，敌机，子弹
+            创建logo，loading，飞机
+        2.飞机
+            1.创建飞机
+            2.移动
+            3.发射子弹
+            4.死亡
+            5.血量
+        3.子弹
+            1.创建子弹
+            2.向上移动
+            3.死亡
+        4.敌机
+            1.随机创建小中大三种类型飞机
+            2.向下运动
+                与子弹做碰撞检测
+                碰撞检测看能否封装
+            3.死亡
+
+        //难度设置
+        1.可以通过修改子弹的产生速度来调整
+        2.可以通过修改子弹的移动速度来调整
+        3.可以通过修改敌机产生数量，速度，类型来决定
+
+        //分数
+        1.每打死一个小飞机得10分
+        2.每打死一个中型飞机得20分
+        3.每打死一个大型飞机得50分
+        4.每打死一个功能飞机得30分同时或触发子弹奖励
+
+        作业:
+			1.现有效果
+			2.我的飞机碰撞敌机,死亡
+			3.计分
+			4.武器升级系统
+			5.大boss(关卡)（选作）
+
+    */
+        function Engine( ele ){
+            this.main = ele.main;
+            this.op = ele.op;
+            // this.score = 0;
+            this.init();
+        }
+        Engine.prototype.init = function(){
+            var that = this;
+            for( let i = 0; i < this.op.length; i++ ){
+                
+                op[i].onclick = function(){
+                    that.value = this.value;
+                    // console.log("难度值为"+that.value);
+                    that.op[i].parentNode.remove();
+                    var logo = creatediv("logo");
+                    var loading = creatediv("loading");
+                    var num = 0;
+                    var t = setInterval(function(){
+                        if( num == 3 ){
+                            num = 1;
+                        }else{
+                            num += 1;
+                        }
+                        loading.style.backgroundImage = "url(images/loading"+ num +".png)";
+                    },500);
+                    setTimeout(function(){
+                        clearInterval(t);
+                        logo.remove();
+                        loading.remove();
+
+                        that.startgame();
+                    },500);
+                }
+            }
+        }
+        Engine.prototype.startgame = function(){
+            switch( this.value ){
+                case 1 : {
+                        //超级困难难度
+                        //开火的速度，也就是发射子弹的间隔
+                        this.firespeed = 700;
+                        //子弹的移动速度
+                        this.bspeed = 3;
+                    }; break;
+                case 2 : {
+                        //困难难度
+                        //开火的速度，也就是发射子弹的间隔
+                        this.firespeed = 500;
+                        //子弹的移动速度
+                        this.bspeed = 5;
+                    }; break;
+                case 3 : { 
+                        //一般难度
+                        //开火的速度，也就是发射子弹的间隔
+                        this.firespeed = 300; 
+                        //子弹的移动速度
+                        this.bspeed = 6
+                    }; break;
+                case 4 : { 
+                        //简单难度
+                        //开火的速度，也就是发射子弹的间隔
+                        this.firespeed = 200;
+                        //子弹的移动速度 
+                        this.bspeed = 7;
+                    }; break;
+                case 5 : { 
+                        //超级简单难度
+                        //开火的速度，也就是发射子弹的间隔
+                        this.firespeed = 100; 
+                        //子弹的移动速度
+                        this.bspeed = 8;
+                    }; break; 
+            }
+            plane.init();
+            plane.fire();
+            this.menu();
+            
+            
+            // console.log(this.firespeed);
+            // new ammoenemy(4);
+            // new Enemy(2);
+            //随机时间随机概率随机数量产生敌机，通过传一个参数来让Enemy对象决定产生那种类型飞机
+            setInterval( () =>{
+                if( Math.random() > 0.8 ){
+                    new Enemy(3);
+                    // this.ele = creatediv("enemy-large");
+                }
+            }, 5000 );
+            setInterval( () => {
+                if( Math.random() > 0.6 ){
+                    new Enemy(2);
+                    // this.ele = creatediv("enemy-middle");
+                }
+            }, 2000 );
+            setInterval( () => {
+                if( Math.random() > 0.4 ){
+                    new Enemy(1);
+                    // this.ele = creatediv("enemy-small");
+                }
+            }, 1000 );
+            // var t =  ;
+            setInterval( () => {
+                if( Math.random() > 0.9){
+                    new ammoenemy(4);
+                    // this.ele = creatediv("enemy-small");
+                }
+            }, 5000 );
+            
+            
+        }
+        Engine.prototype.menu = function(){
+            this.goal = creatediv("score");
+            this.goal.innerHTML = 0;
+        }
+
+        var plane = {
+            init(){
+                this.ele = creatediv("my-plane");
+                this.ele.style.left = parseInt(engine.main.offsetWidth/2)-parseInt(this.ele.offsetWidth/2) + "px";
+                this.hp = 5;
+                this.ele.style.top = engine.main.offsetHeight - this.ele.offsetHeight + "px";
+                this.amount = [];
+                this.move();
+                this.hpmenu();
+            },
+            hpmenu(){
+                this.hpmenu = creatediv("my-planehp");
+                for( var i = 0; i < this.hp; i++ ){
+                    this["clot"+i] = creatediv("hpclot");
+                    this.hpmenu.appendChild( this["clot"+i] );
+                }
+            },
+            move(){
+                document.onmousemove = (eve) =>{
+                    var e = eve || window.event;
+                    this.x = e.clientX - engine.main.offsetLeft - (this.ele.offsetWidth/2);
+                    this.y = e.clientY - (this.ele.offsetHeight/2);
+                    if( this.x < 0 ) this.x = 0;
+                    if( this.y < 0 ) this.y = 0;
+                    if( this.x > engine.main.offsetWidth - this.ele.offsetWidth ) this.x = engine.main.offsetWidth - this.ele.offsetWidth;
+                    this.ele.style.left = this.x + "px";
+                    this.ele.style.top = this.y + "px";
+                }
+            },
+            fire(){
+                // console.log(engine.firespeed);
+                if( this.plane1timer ){
+                    clearInterval(this.plane1timer);
+                }
+                this.planetimer = setInterval( () => {
+                    //每产生一个子弹就在数组中添加一个，便于检测当前存在的子弹
+                    this.amount.push( new Bullet() ); 
+                },engine.firespeed);
+            },
+            changefire(){
+                clearInterval(this.planetimer);
+                this.plane1timer = setInterval( () => {
+                    //每产生一个子弹就在数组中添加一个，便于检测当前存在的子弹
+                    this.amount.push( new Bulletadd() ); 
+                },engine.firespeed);
+            },
+            die(){
+                //清除移动事件，使玩家不能移动
+                document.onmousemove = null;
+                clearInterval( this.planetimer );
+                if( this.plane1timer ){
+                    clearInterval(this.plane1timer);
+                }
+                //播放死亡效果，之后清除玩家飞机
+                var num = 0;
+                this.dietimer = setInterval(() => {
+                    if( num == 4 ){
+                        clearInterval(this.dietimer);
+                        this.ele.remove();
+                    }else{
+                        num++
+                    }
+                    this.ele.style.backgroundImage = "url(images/me_die"+ num +".png)";
+                }, 200 );
+            }
+        }
+
+        class Bullet{
+            constructor(){
+                this.init();
+            }
+            init(){
+                this.ele = creatediv("bullet");
+                this.type = 0;
+                this.ele.style.left = plane.ele.offsetLeft + parseInt(plane.ele.offsetWidth/2) - 2 + "px";
+                this.ele.style.top = plane.ele.offsetTop - this.ele.offsetHeight + "px";
+                this.move();
+            }
+            // change(){
+            //     this.ele.className = "bulletadd";
+            //     this.ele.style.left = plane.ele.offsetLeft + parseInt(plane.ele.offsetWidth/2) - 10 + "px";
+            // }
+            move(){
+                // var speed = 8;
+                // console.log( engine.bspeed );
+                this.movetimer = setInterval( () => {
+                    // this.ele.style.top += 3;
+                    //判断子弹到达边界自动炸毁
+                    if( this.ele.offsetTop <= 0 ){
+                        clearInterval( this.movetimer );
+                        this.die();
+                    }
+                    this.ele.style.top = this.ele.offsetTop - engine.bspeed + "px";
+                },10 );
+            }
+            die(){
+                //子弹死亡清除计时器，停止子弹的移动，防止死亡自后的图片也移动
+                clearInterval( this.movetimer );
+                //把子弹div的类名改为死亡子弹的类名，使得子弹显示为死亡爆炸的状态
+                this.ele.className = "bullet_die";
+                
+                //检测死亡的子弹和数组中的子弹是否有一样的有的话就在数组中删除这个元素
+                for( var i = 0; i < plane.amount.length; i++ ){
+                    if( plane.amount[i].ele == this.ele ){
+                        plane.amount.splice(i,1);
+                    }
+                }
+                
+                //死亡后延迟200ms替换图片使得爆炸效果更好
+                setTimeout(() => {
+                    this.ele.backgroundImage = "url(images/die2.png)";
+                }, 200);
+                //死亡后清除子弹这个元素
+                setTimeout( ()=>{
+                    this.ele.remove();
+                }, 400);
+                // var bd = creatediv("bullet_die");
+                // bd.style.left = this.ele.offsetLeft + "px";
+                // bd.style.top = this.ele.offsetTop + "px";
+                // this.ele.remove();
+            }
+
+        }
+        class Bulletadd extends Bullet{
+            constructor(){
+                super();
+            }
+            init(){
+                this.ele = creatediv("bulletadd");
+                this.type = 1;
+                this.ele.style.left = plane.ele.offsetLeft + parseInt(plane.ele.offsetWidth/2) - 10 + "px";
+                this.ele.style.top = plane.ele.offsetTop - this.ele.offsetHeight + "px";
+                this.move();
+            }
+        }
+
+
+        //普通敌兵类
+        class Enemy{
+            constructor(type){
+                this.type = type;
+                this.init();
+            }
+            init(){
+                switch(this.type){
+                    case 1 : {
+                            //对应类型敌机的速度
+                            this.s = 3;
+                            //对应类型飞机的死亡爆炸图片数量
+                            this.p = 3;
+                            //对应类型飞机的血量
+                            this.hp = 3;
+                            this.ele = creatediv("enemy-small"); 
+                        }; break;
+                    case 2 : { 
+                            //对应类型敌机的速度
+                            this.s = 2;
+                            //对应类型飞机的死亡爆炸图片数量
+                            this.p = 4;
+                            //对应类型飞机的血量
+                            this.hp = 4;
+                            this.ele = creatediv("enemy-middle");
+                        }; break;
+                    case 3 : {
+                            //对应类型敌机的速度
+                            this.s = 1;
+                            //对应类型飞机的死亡爆炸图片数量
+                            this.p = 6;
+                            //对应类型飞机的血量
+                            this.hp = 6;
+                            this.ele = creatediv("enemy-large"); 
+                        }; break;
+                }
+                
+                //设置飞机初始位置在上方但要刚开始看不到，慢慢的走过来
+                this.ele.style.left = Math.random()*( engine.main.offsetWidth - this.ele.offsetWidth ) + "px";
+                this.ele.style.top = -this.ele.offsetHeight + "px";
+                this.move();
+            }
+            move(){
+                this.movetimer = setInterval( () => {
+                    // this.ele.style.top += 3;
+                    //判断敌机到达边界自动炸毁
+                    if( this.ele.offsetTop >= engine.main.offsetHeight ){
+                        clearInterval( this.movetimer );
+                        this.die();
+                    }else{
+                        this.ele.style.top = this.ele.offsetTop + this.s+5 + "px";
+                    }
+
+                    // console.log(plane.amount);
+                    
+                    //子弹的碰撞检测
+                    //检测存在的子弹的位置是否有与飞机位置重合的有的话就检测为产生碰撞造成伤害
+                    //注意检测时间的问题，检测时间过长可能会出现检测不到的子弹造成子弹穿过敌机的问题
+                    for( var i = 0; i < plane.amount.length; i++ ){
+                        if( plane.amount[i].ele.offsetLeft + plane.amount[i].ele.offsetWidth > this.ele.offsetLeft && plane.amount[i].ele.offsetLeft < this.ele.offsetLeft + this.ele.offsetWidth && plane.amount[i].ele.offsetTop + plane.amount[i].ele.offsetHeight > this.ele.offsetTop && plane.amount[i].ele.offsetTop < this.ele.offsetTop + this.ele.offsetHeight ){
+
+                            //检测到碰撞敌机血量就减少，减少到0就死亡
+                            if( plane.amount[i].type == 0 ){
+                                this.hp--;
+                            }else{
+                                this.hp -= 3;
+                            }
+                            //检测到碰撞让子弹死亡，不然会出现子弹穿过敌机的情况
+                            plane.amount[i].die();
+                            
+                            // this.hp--;
+                            if( this.hp <= 0 ){
+                                // clearInterval( this.movetimer );
+                                switch( this.type ){
+                                    case 1 : {
+                                        engine.goal.innerHTML = parseInt(engine.goal.innerHTML) + 10;
+                                    }; break;
+                                    case 2 : {
+                                        engine.goal.innerHTML = parseInt(engine.goal.innerHTML) + 20;
+                                    }; break;
+                                    case 3 : {
+                                        engine.goal.innerHTML = parseInt(engine.goal.innerHTML) + 50;
+                                    }; break;
+                                }
+                                this.die();
+                            }
+                        }
+                    }
+
+                    //玩家的飞机的碰撞检测
+                    if( plane.ele.offsetLeft + plane.ele.offsetWidth > this.ele.offsetLeft && plane.ele.offsetLeft < this.ele.offsetLeft + this.ele.offsetWidth && plane.ele.offsetTop + plane.ele.offsetHeight > this.ele.offsetTop && plane.ele.offsetTop < this.ele.offsetTop + this.ele.offsetHeight ){
+                        //检测到与玩家飞机碰撞的敌机死亡
+                        this.die();
+                        switch( this.type ){
+                            case 1 : {
+                                engine.goal.innerHTML = parseInt(engine.goal.innerHTML) + 10;
+                            }; break;
+                            case 2 : {
+                                engine.goal.innerHTML = parseInt(engine.goal.innerHTML) + 20;
+                            }; break;
+                            case 3 : {
+                                engine.goal.innerHTML = parseInt(engine.goal.innerHTML) + 50;
+                            }; break;
+                        }
+                        console.log(plane.hp);
+                        //减少血量
+                        plane.hp--;
+                        //消除血块
+                        plane["clot"+plane.hp].remove();
+
+                        if( plane.hp == 0 ){
+                            //血量为零时玩家飞机死亡
+                            plane.die();
+                        }
+                    }
+                    
+                },50 );
+
+            }
+            die(){
+                var num = 0;
+                clearInterval( this.movetimer );
+                //死亡后要播放死亡效果所以替换图片，又因为不同类型敌机死亡效果不同，所以采用计时器和拼接字符的方式改变图片的url，当图片播到最后一张时真正死亡要清楚计时器同时清除这个元素
+                this.dietimer = setInterval(() => {
+                    if( num == this.p ){
+                        clearInterval(this.dietimer);
+                        this.ele.remove();
+                    }else{
+                        num++;
+                    } 
+                    // console.log("url(images/plane"+ this.type +"_die"+ num +".png)");
+                    this.ele.style.backgroundImage = "url(images/plane"+ this.type +"_die"+ num +".png)";
+                }, 200);
+                // setTimeout( ()=>{
+                //     this.ele.remove();
+                // }, 400);
+            }
+        }
+
+        //弹药补充敌机类
+        class ammoenemy extends Enemy{
+            constructor(type){
+                super(type);
+            }
+            init(){
+                switch(this.type){
+                    case 1 : {
+                            //对应类型敌机的速度
+                            this.s = 3;
+                            //对应类型飞机的死亡爆炸图片数量
+                            this.p = 3;
+                            //对应类型飞机的血量
+                            this.hp = 3;
+                            this.ele = creatediv("enemy-small"); 
+                        }; break;
+                    case 2 : { 
+                            //对应类型敌机的速度
+                            this.s = 2;
+                            //对应类型飞机的死亡爆炸图片数量
+                            this.p = 4;
+                            //对应类型飞机的血量
+                            this.hp = 4;
+                            this.ele = creatediv("enemy-middle");
+                        }; break;
+                    case 3 : {
+                            //对应类型敌机的速度
+                            this.s = 1;
+                            //对应类型飞机的死亡爆炸图片数量
+                            this.p = 6;
+                            //对应类型飞机的血量
+                            this.hp = 6;
+                            this.ele = creatediv("enemy-large"); 
+                        }; break;
+                    case 4 : {
+                            //弹药敌机的速度
+                            this.s = 1;
+                            //弹药飞机的死亡爆炸图片数量
+                            this.p = 3;
+                            //弹药飞机的血量
+                            this.hp = 3;
+                            this.ele = creatediv("ammoenemy"); 
+                        }; break;
+                }
+                //设置飞机初始位置在上方但要刚开始看不到，慢慢的走过来
+                this.ele.style.left = Math.random()*( engine.main.offsetWidth - this.ele.offsetWidth ) + "px";
+                this.ele.style.top = -this.ele.offsetHeight + "px";
+                this.move();
+            }
+            move(){
+                this.movetimer = setInterval( () => {
+                    // this.ele.style.top += 3;
+                    //判断敌机到达边界自动炸毁
+                    if( this.ele.offsetTop >= engine.main.offsetHeight ){
+                        clearInterval( this.movetimer );
+                        this.ele.remove();
+                    }else{
+                        this.ele.style.top = this.ele.offsetTop + this.s+5 + "px";
+                    }
+
+                    // console.log(plane.amount);
+                    
+                    //子弹的碰撞检测
+                    //检测存在的子弹的位置是否有与飞机位置重合的有的话就检测为产生碰撞造成伤害
+                    //注意检测时间的问题，检测时间过长可能会出现检测不到的子弹造成子弹穿过敌机的问题
+                    for( var i = 0; i < plane.amount.length; i++ ){
+                        if( plane.amount[i].ele.offsetLeft + plane.amount[i].ele.offsetWidth > this.ele.offsetLeft && plane.amount[i].ele.offsetLeft < this.ele.offsetLeft + this.ele.offsetWidth && plane.amount[i].ele.offsetTop + plane.amount[i].ele.offsetHeight > this.ele.offsetTop && plane.amount[i].ele.offsetTop < this.ele.offsetTop + this.ele.offsetHeight ){
+
+                            //检测到碰撞敌机血量就减少，减少到0就死亡
+                            if( plane.amount[i].type == 0 ){
+                                this.hp--;
+                            }else{
+                                this.hp -= 3;
+                            }
+
+                            //检测到碰撞让子弹死亡，不然会出现子弹穿过敌机的情况
+                            plane.amount[i].die();
+                            
+                            // this.hp--;
+                            if( this.hp <= 0 ){
+                                // clearInterval( this.movetimer );
+                                switch( this.type ){
+                                    case 1 : {
+                                        engine.goal.innerHTML = parseInt(engine.goal.innerHTML) + 10;
+                                    }; break;
+                                    case 2 : {
+                                        engine.goal.innerHTML = parseInt(engine.goal.innerHTML) + 20;
+                                    }; break;
+                                    case 3 : {
+                                        engine.goal.innerHTML = parseInt(engine.goal.innerHTML) + 50;
+                                    }; break;
+                                }
+                                this.die();
+                            }
+                        }
+                    }
+
+                    //玩家的飞机的碰撞检测
+                    if( plane.ele.offsetLeft + plane.ele.offsetWidth > this.ele.offsetLeft && plane.ele.offsetLeft < this.ele.offsetLeft + this.ele.offsetWidth && plane.ele.offsetTop + plane.ele.offsetHeight > this.ele.offsetTop && plane.ele.offsetTop < this.ele.offsetTop + this.ele.offsetHeight ){
+                        //检测到与玩家飞机碰撞的敌机死亡
+                        this.die();
+                        switch( this.type ){
+                            case 1 : {
+                                engine.goal.innerHTML = parseInt(engine.goal.innerHTML) + 10;
+                            }; break;
+                            case 2 : {
+                                engine.goal.innerHTML = parseInt(engine.goal.innerHTML) + 20;
+                            }; break;
+                            case 3 : {
+                                engine.goal.innerHTML = parseInt(engine.goal.innerHTML) + 50;
+                            }; break;
+                        }
+                        console.log(plane.hp);
+                        //减少血量
+                        plane.hp--;
+                        //消除血块
+                        plane["clot"+plane.hp].remove();
+
+                        if( plane.hp == 0 ){
+                            //血量为零时玩家飞机死亡
+                            plane.die();
+                        }
+                    }
+                    
+                },50 );
+
+            }
+            die(){
+                var num = 0;
+                clearInterval( this.movetimer );
+                //死亡后要播放死亡效果所以替换图片，又因为不同类型敌机死亡效果不同，所以采用计时器和拼接字符的方式改变图片的url，当图片播到最后一张时真正死亡要清楚计时器同时清除这个元素
+                this.dietimer = setInterval(() => {
+                    if( num == this.p ){
+                        clearInterval(this.dietimer);
+                        num=0;
+                        new Ammo( this.ele.offsetLeft , this.ele.offsetHeight );
+                        this.ele.remove();
+                    }else{
+                        num++;
+                    } 
+                    // console.log("url(images/plane"+ this.type +"_die"+ num +".png)");
+                    this.ele.style.backgroundImage = "url(images/plane1_die"+ num +".png)";
+                }, 200);
+                // setTimeout( ()=>{
+                //     this.ele.remove();
+                // }, 400);
+            }
+        }
+
+        class Ammo{
+            constructor(x,y){
+                this.x = x;
+                this.y = y;
+                this.init();
+            }
+            init(){
+                this.ele = creatediv("ammo");
+                this.ele.style.left = this.x + "px";
+                this.ele.style.top = this.y + "px";
+                this.move();
+            }
+            move(){
+                this.movetimer =  setInterval( () => {
+                    var tx = parseInt(Math.random()*( engine.main.offsetWidth - this.ele.offsetWidth ));
+                    var ty = parseInt(Math.random()*( engine.main.offsetHeight - this.ele.offsetHeight ));
+                    chain( this.ele , { left : tx , top : ty } );
+
+                    if( plane.ele.offsetLeft + plane.ele.offsetWidth > this.ele.offsetLeft && plane.ele.offsetLeft < this.ele.offsetLeft + this.ele.offsetWidth && plane.ele.offsetTop + plane.ele.offsetHeight > this.ele.offsetTop && plane.ele.offsetTop < this.ele.offsetTop + this.ele.offsetHeight ){
+                        clearTimeout(this.firedietimer);
+                        this.die();
+                        plane.changefire();
+                        this.firedietimer = setTimeout(() => {
+                            plane.fire();
+                            clearTimeout(this.firedietimer);
+                        } , 5000);
+                    }
+                } , 100);
+                var t = Math.random()*1+1;
+                setTimeout( () => {
+                    this.die();
+                } , t*1000 );
+            }
+            die(){
+                clearInterval(this.movetimer);
+                this.ele.remove();
+            }
+        }
+
+
+
+        function creatediv( cn ){
+            var div = document.createElement("div");
+            div.className = cn;
+            document.querySelector(".main").appendChild(div);
+            return div;
+        }
+        function getstyle( obj , attr , type ){
+            if( obj.currentStyle ){
+                return obj.currentStyle[ attr ];
+            }else{
+                return getComputedStyle( obj , type )[ attr ];
+            }
+        }
+        function chain( ele , json , callback ){
+            clearInterval(ele.timer);
+            ele.timer = setInterval(function(){
+                var flag = true;
+                for( var i in json ){
+                    var inow = getstyle( ele , i , "false" );
+
+                    inow = i=="opacity"? inow*100 : parseInt( inow );
+                    // inow = i=="opacity"? inow*100 : parseInt(inow);
+
+                    var speed = ( json[i] - inow )/10;
+                    speed = speed < 0? Math.floor( speed ) : Math.ceil( speed );
+
+                    if( inow != json[i] ){
+                        flag = false;
+                    }
+
+                    if( i == "opacity" ){
+                        inow = inow + speed;
+                        ele.style.opacity = inow/100;
+                        ele.style.filter = "alpha:(opacity="+ inow + ")";
+                    }else{
+                        ele.style[i] = inow + speed + "px";
+                    }
+                }
+                if( flag ){
+                    clearInterval(ele.timer);
+                    if( callback ){
+                        callback();
+                    }
+                }
+                
+            },30)
+        }
+        var op = document.querySelector(".options").children;
+        var engine = new Engine( { 
+            main : document.querySelector(".main"),
+            op   : document.querySelector(".options").children
+         } );
+</script>
+</html>
